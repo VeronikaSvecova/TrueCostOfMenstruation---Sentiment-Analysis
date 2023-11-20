@@ -1,0 +1,38 @@
+/*
+Spojení očištěné tabulky REVIEWS_CLEAN a tabulky připravené v Pandas, 
+která obsahuje výsledek analýzy sentimentu. Sloupec sentiment převádíme do 
+numerického vyjádření sentimentu, abychom mohli spočítat výsledný sentiment na
+úrovni značky. */
+
+CREATE OR REPLACE TABLE HODNOCENI_SENTIMENT_ZNACKA AS
+SELECT r."Brand"
+    ,r."typ"
+    ,r."itemName_HEUREKA"
+    ,r."ratings_avg"
+    ,r."reviews"
+    ,s."sentiment"
+    ,s."confidence_scores_positive"
+    ,s."confidence_scores_negative"
+    ,s."confidence_scores_neutral"
+    ,CASE
+WHEN "sentiment" = 'positive' then 1
+WHEN "sentiment" = 'negative' then -1
+WHEN "sentiment" = 'mixed' then 0
+END AS sentiment_numerical
+FROM REVIEWS_CLEAN AS r
+LEFT JOIN "SENTIMENT" AS s ON r."itemUrl_HEUREKA" = s."id";
+
+
+/*Připravujeme tabulku pro vizualizaci v Tableau, kde budeme zobrazovat
+výledným sentiment a ratings na úrovni značky */
+
+CREATE OR REPLACE TEMPORARY TABLE SENTIMENT_RATING_TABLEAU AS
+SELECT "Brand", avg(TRY_CAST("ratings_avg" AS DECIMAL) )AS ratings_average, ROUND(AVG("SENTIMENT_NUMERICAL")*100, 0) as sentiment_average  
+FROM "HODNOCENI_SENTIMENT_ZNACKA"
+GROUP BY "Brand"
+ORDER BY "SENTIMENT_AVERAGE" DESC nulls last;
+
+select CASE
+WHEN 
+FROM "GROUPBY" as h
+LEFT JOIN "KALHOTKY_KALISKY_TABLEAU" as t ON h."Brand" = t."Brand";
